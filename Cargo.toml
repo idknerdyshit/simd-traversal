@@ -2,10 +2,12 @@
 name = "simd-traverse"
 version = "0.1.0"
 edition = "2024"
+authors = ["idknerdyshit <sara@idknerdyshit.com>"]
 description = "A small traversal toolkit for byte-oriented SIMD scanners and parsers"
 license = "MIT OR Apache-2.0"
 readme = "README.md"
 documentation = "https://docs.rs/simd-traverse"
+homepage = "https://github.com/idknerdyshit/simd-traversal"
 repository = "https://github.com/idknerdyshit/simd-traversal"
 keywords = ["simd", "bytes", "parsing", "search", "iteration"]
 categories = ["algorithms", "parsing"]
