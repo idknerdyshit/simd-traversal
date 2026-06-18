@@ -243,3 +243,83 @@ mod neon {
         assert!(!any_byte_eq_u8x16(block, b'Z'));
     }
 }
+
+#[cfg(target_arch = "x86_64")]
+mod sse {
+    use simd_traverse::SimdTraverseExt;
+    use simd_traverse::sse::{any_byte_eq_u8x16, load_u8x16, match_byte_mask_u8x16};
+
+    #[test]
+    fn sse_load_and_match_mask_cover_expected_lanes() {
+        let bytes = *b"abcdefghijklmnop";
+        let block = bytes.as_slice().simd_blocks::<16, 16>().next().unwrap();
+        let _register = load_u8x16(block);
+
+        assert_eq!(match_byte_mask_u8x16(block, b'a'), 0x0001);
+        assert_eq!(match_byte_mask_u8x16(block, b'h'), 0x0080);
+        assert_eq!(match_byte_mask_u8x16(block, b'p'), 0x8000);
+        assert_eq!(match_byte_mask_u8x16(block, b'z'), 0x0000);
+    }
+
+    #[test]
+    fn sse_any_byte_eq_reports_presence() {
+        let bytes = *b"abcdefghijklmnop";
+        let block = bytes.as_slice().simd_blocks::<16, 16>().next().unwrap();
+
+        assert!(any_byte_eq_u8x16(block, b'j'));
+        assert!(!any_byte_eq_u8x16(block, b'Z'));
+    }
+}
+
+#[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+mod avx2 {
+    use simd_traverse::SimdTraverseExt;
+    use simd_traverse::avx2::{any_byte_eq_u8x32, load_u8x32, match_byte_mask_u8x32};
+
+    #[test]
+    fn avx2_load_and_match_mask_cover_expected_lanes() {
+        let bytes = *b"abcdefghijklmnopqrstuvwxyz012345";
+        let block = bytes.as_slice().simd_blocks::<32, 32>().next().unwrap();
+        let _register = load_u8x32(block);
+
+        assert_eq!(match_byte_mask_u8x32(block, b'a'), 0x0000_0001);
+        assert_eq!(match_byte_mask_u8x32(block, b'q'), 0x0001_0000);
+        assert_eq!(match_byte_mask_u8x32(block, b'5'), 0x8000_0000);
+        assert_eq!(match_byte_mask_u8x32(block, b'Z'), 0x0000_0000);
+    }
+
+    #[test]
+    fn avx2_any_byte_eq_reports_presence() {
+        let bytes = *b"abcdefghijklmnopqrstuvwxyz012345";
+        let block = bytes.as_slice().simd_blocks::<32, 32>().next().unwrap();
+
+        assert!(any_byte_eq_u8x32(block, b'3'));
+        assert!(!any_byte_eq_u8x32(block, b'Z'));
+    }
+}
+
+#[cfg(all(target_arch = "x86_64", feature = "runtime-dispatch"))]
+mod x86 {
+    use simd_traverse::SimdTraverseExt;
+    use simd_traverse::x86::{any_byte_eq_u8x32, match_byte_mask_u8x32};
+
+    #[test]
+    fn runtime_dispatch_match_mask_covers_expected_lanes() {
+        let bytes = *b"abcdefghijklmnopqrstuvwxyz012345";
+        let block = bytes.as_slice().simd_blocks::<32, 32>().next().unwrap();
+
+        assert_eq!(match_byte_mask_u8x32(block, b'a'), 0x0000_0001);
+        assert_eq!(match_byte_mask_u8x32(block, b'q'), 0x0001_0000);
+        assert_eq!(match_byte_mask_u8x32(block, b'5'), 0x8000_0000);
+        assert_eq!(match_byte_mask_u8x32(block, b'Z'), 0x0000_0000);
+    }
+
+    #[test]
+    fn runtime_dispatch_any_byte_eq_reports_presence() {
+        let bytes = *b"abcdefghijklmnopqrstuvwxyz012345";
+        let block = bytes.as_slice().simd_blocks::<32, 32>().next().unwrap();
+
+        assert!(any_byte_eq_u8x32(block, b'3'));
+        assert!(!any_byte_eq_u8x32(block, b'Z'));
+    }
+}

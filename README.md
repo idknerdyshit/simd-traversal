@@ -48,6 +48,58 @@ traversal invariant for 16-byte NEON work.
 }
 ```
 
+## x86_64 SSE2
+
+On `x86_64`, the crate exposes a matching `sse` module for 16-byte SSE2 work.
+
+```rust
+#[cfg(target_arch = "x86_64")]
+{
+    use simd_traverse::sse::match_byte_mask_u8x16;
+    use simd_traverse::SimdTraverseExt;
+
+    let haystack = b"abcdefghijklmnop";
+    let block = haystack.simd_blocks::<16, 16>().next().unwrap();
+
+    assert_eq!(match_byte_mask_u8x16(block, b'a'), 0b0000_0000_0000_0001);
+}
+```
+
+## x86_64 AVX2
+
+When AVX2 is enabled at compile time, the crate exposes an `avx2` module for
+32-byte work.
+
+```rust
+#[cfg(all(target_arch = "x86_64", target_feature = "avx2"))]
+{
+    use simd_traverse::avx2::match_byte_mask_u8x32;
+    use simd_traverse::SimdTraverseExt;
+
+    let haystack = b"abcdefghijklmnopqrstuvwxyz012345";
+    let block = haystack.simd_blocks::<32, 32>().next().unwrap();
+
+    assert_eq!(match_byte_mask_u8x32(block, b'a'), 0x0000_0001);
+}
+```
+
+With the `runtime-dispatch` feature, the crate also exposes an `x86` module that
+uses AVX2 when the running CPU supports it and falls back to SSE2 otherwise.
+This feature enables `std`; the default crate remains `no_std`.
+
+```rust
+#[cfg(all(target_arch = "x86_64", feature = "runtime-dispatch"))]
+{
+    use simd_traverse::x86::match_byte_mask_u8x32;
+    use simd_traverse::SimdTraverseExt;
+
+    let haystack = b"abcdefghijklmnopqrstuvwxyz012345";
+    let block = haystack.simd_blocks::<32, 32>().next().unwrap();
+
+    assert_eq!(match_byte_mask_u8x32(block, b'5'), 0x8000_0000);
+}
+```
+
 ## Tail Semantics
 
 The iterator yields step-aligned offsets `0, STEP, 2 * STEP, ...` while a
@@ -78,5 +130,5 @@ assert_eq!(haystack.simd_tail::<16, 32>(), b"");
 
 - Generic element types beyond `u8`
 - Search algorithms, parsers, or tokenization frameworks
-- Broad cross-platform SIMD coverage in v0.1
+- SIMD operations beyond byte equality masks in v0.1
 - Unsafe implementation tricks without a measured need beyond focused arch helpers

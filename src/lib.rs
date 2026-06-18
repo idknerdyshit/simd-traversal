@@ -1,8 +1,21 @@
+#![no_std]
 #![doc = include_str!("../README.md")]
 
+#[cfg(feature = "std")]
+extern crate std;
+
+#[cfg(all(
+    target_arch = "x86_64",
+    any(target_feature = "avx2", feature = "runtime-dispatch", doc)
+))]
+pub mod avx2;
 mod blocks;
 #[cfg(target_arch = "aarch64")]
 pub mod neon;
+#[cfg(target_arch = "x86_64")]
+pub mod sse;
+#[cfg(all(target_arch = "x86_64", feature = "runtime-dispatch"))]
+pub mod x86;
 
 pub use crate::blocks::{SimdBlock, SimdBlocks};
 

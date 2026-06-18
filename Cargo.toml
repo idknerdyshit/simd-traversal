@@ -2,6 +2,7 @@
 name = "simd-traverse"
 version = "0.1.0"
 edition = "2024"
+rust-version = "1.85"
 authors = ["idknerdyshit <sara@idknerdyshit.com>"]
 description = "A small traversal toolkit for byte-oriented SIMD scanners and parsers"
 license = "MIT OR Apache-2.0"
@@ -11,6 +12,15 @@ homepage = "https://github.com/idknerdyshit/simd-traversal"
 repository = "https://github.com/idknerdyshit/simd-traversal"
 keywords = ["simd", "bytes", "parsing", "search", "iteration"]
 categories = ["algorithms", "parsing"]
+
+[package.metadata.docs.rs]
+all-features = true
+targets = ["aarch64-unknown-linux-gnu", "x86_64-unknown-linux-gnu"]
+
+[features]
+default = []
+std = []
+runtime-dispatch = ["std"]
 
 [lints.rust]
 missing_docs = "warn"
