@@ -1,10 +1,14 @@
-//! ARM64 NEON helpers built on top of [`SimdBlock`].
+//! ARM NEON helpers built on top of [`SimdBlock`].
 //!
 //! These helpers consume the traversal crate's in-bounds load guarantee without
 //! changing the architecture-neutral traversal API.
 
 use crate::SimdBlock;
+
+#[cfg(target_arch = "aarch64")]
 use core::arch::aarch64::{uint8x16_t, vceqq_u8, vdupq_n_u8, vld1q_u8, vst1q_u8};
+#[cfg(all(target_arch = "arm", target_feature = "neon"))]
+use core::arch::arm::{uint8x16_t, vceqq_u8, vdupq_n_u8, vld1q_u8, vst1q_u8};
 
 /// Loads a 16-byte traversal block into a NEON register.
 ///
@@ -25,13 +29,15 @@ pub fn load_u8x16<const STEP: usize>(block: SimdBlock<'_, STEP, 16>) -> uint8x16
 pub fn match_byte_mask_u8x16<const STEP: usize>(block: SimdBlock<'_, STEP, 16>, needle: u8) -> u16 {
     let bytes = load_u8x16(block);
     let needles = unsafe {
-        // SAFETY: this module is only compiled on `aarch64`, where NEON is part
-        // of the architectural baseline for these intrinsics.
+        // SAFETY: this module is only compiled when NEON is available, either
+        // as part of the `aarch64` baseline or via `target_feature = "neon"`
+        // on 32-bit ARM.
         vdupq_n_u8(needle)
     };
     let matches = unsafe {
-        // SAFETY: this module is only compiled on `aarch64`, where NEON is part
-        // of the architectural baseline for these intrinsics.
+        // SAFETY: this module is only compiled when NEON is available, either
+        // as part of the `aarch64` baseline or via `target_feature = "neon"`
+        // on 32-bit ARM.
         vceqq_u8(bytes, needles)
     };
     let mut lanes = [0_u8; 16];

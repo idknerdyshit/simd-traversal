@@ -31,16 +31,20 @@ assert_eq!(haystack.simd_tail::<8, 16>(), b"tail");
 ```
 
 The `examples/byte_scanner.rs` example shows a complete byte scanner that
-exercises the NEON, SSE2, AVX2, runtime-dispatched x86, and scalar fallback
-paths through `cfg` selection.
+exercises the arm/aarch64 NEON, SSE2, AVX2, runtime-dispatched x86, and scalar
+fallback paths through `cfg` selection.
 
-## ARM64 NEON
+## ARM NEON
 
-On `aarch64`, the crate also exposes a small `neon` module that consumes the
-traversal invariant for 16-byte NEON work.
+On `aarch64`, and on 32-bit `arm` when the `neon` target feature is enabled,
+the crate exposes a small `neon` module that consumes the traversal invariant
+for 16-byte NEON work.
 
 ```rust
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 {
     use simd_traverse::neon::match_byte_mask_u8x16;
     use simd_traverse::SimdTraverseExt;

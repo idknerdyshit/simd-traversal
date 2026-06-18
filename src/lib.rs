@@ -10,7 +10,10 @@ extern crate std;
 ))]
 pub mod avx2;
 mod blocks;
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 pub mod neon;
 #[cfg(target_arch = "x86_64")]
 pub mod sse;

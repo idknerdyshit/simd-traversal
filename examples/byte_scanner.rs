@@ -1,5 +1,10 @@
 //! A byte scanner that uses the best available `simd-traverse` helper module.
 
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 use simd_traverse::SimdTraverseExt;
 
 fn main() {
@@ -40,7 +45,16 @@ fn backend_name() -> &'static str {
     "aarch64 NEON"
 }
 
-#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+#[cfg(all(target_arch = "arm", target_feature = "neon"))]
+fn backend_name() -> &'static str {
+    "arm NEON"
+}
+
+#[cfg(not(any(
+    target_arch = "x86_64",
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+)))]
 fn backend_name() -> &'static str {
     "scalar"
 }
@@ -104,7 +118,10 @@ fn find_byte_offsets(haystack: &[u8], needle: u8) -> Vec<usize> {
     offsets
 }
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 fn find_byte_offsets(haystack: &[u8], needle: u8) -> Vec<usize> {
     let mut offsets = Vec::new();
     let (blocks, tail) = haystack.simd_partition::<16, 16>();
@@ -121,11 +138,20 @@ fn find_byte_offsets(haystack: &[u8], needle: u8) -> Vec<usize> {
     offsets
 }
 
-#[cfg(not(any(target_arch = "x86_64", target_arch = "aarch64")))]
+#[cfg(not(any(
+    target_arch = "x86_64",
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+)))]
 fn find_byte_offsets(haystack: &[u8], needle: u8) -> Vec<usize> {
     scalar_find_byte_offsets(haystack, needle)
 }
 
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 fn push_mask_offsets(mut mask: u32, block_offset: usize, offsets: &mut Vec<usize>) {
     while mask != 0 {
         let lane = mask.trailing_zeros() as usize;
@@ -135,6 +161,11 @@ fn push_mask_offsets(mut mask: u32, block_offset: usize, offsets: &mut Vec<usize
     }
 }
 
+#[cfg(any(
+    target_arch = "x86_64",
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 fn push_tail_offsets(tail: &[u8], tail_offset: usize, needle: u8, offsets: &mut Vec<usize>) {
     offsets.extend(
         tail.iter()

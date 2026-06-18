@@ -217,7 +217,10 @@ fn load_less_than_step_panics_at_api_entry() {
     let _ = bytes.as_slice().simd_tail::<32, 16>();
 }
 
-#[cfg(target_arch = "aarch64")]
+#[cfg(any(
+    target_arch = "aarch64",
+    all(target_arch = "arm", target_feature = "neon")
+))]
 mod neon {
     use simd_traverse::SimdTraverseExt;
     use simd_traverse::neon::{any_byte_eq_u8x16, load_u8x16, match_byte_mask_u8x16};
