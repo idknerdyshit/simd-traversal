@@ -30,6 +30,10 @@ assert_eq!(offsets, vec![0, 8, 16]);
 assert_eq!(haystack.simd_tail::<8, 16>(), b"tail");
 ```
 
+The `examples/byte_scanner.rs` example shows a complete byte scanner that
+exercises the NEON, SSE2, AVX2, runtime-dispatched x86, and scalar fallback
+paths through `cfg` selection.
+
 ## ARM64 NEON
 
 On `aarch64`, the crate also exposes a small `neon` module that consumes the
